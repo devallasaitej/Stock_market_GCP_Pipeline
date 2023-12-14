@@ -47,3 +47,29 @@ FROM `yahoo.nasdaq100`
 WHERE volume > (SELECT AVG(volume) * 2 FROM `yahoo.nasdaq100`)
 ORDER BY volume DESC
 LIMIT 5;
+
+-- Streak Lengths
+WITH streaks AS (
+  SELECT
+    DATE,
+    close,
+    LAG(close) OVER (ORDER BY DATE) AS prev_close,
+    CASE WHEN close > LAG(close) OVER (ORDER BY DATE) THEN 'bull' ELSE 'bear' END AS streak_type
+  FROM `yahoo.nasdaq100`
+)
+SELECT
+  streak_type,
+  COUNT(*) AS streak_length
+FROM streaks
+GROUP BY streak_type
+ORDER BY streak_length DESC;
+
+-- Days with high price gaps
+SELECT
+  DATE,
+  open,
+  close,
+  ABS(open - close) AS price_gap
+FROM `yahoo.nasdaq100`
+ORDER BY price_gap DESC
+LIMIT 5;
